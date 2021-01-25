@@ -1,0 +1,17 @@
+Title:
+Tính lãi cho các khoản nợ quá hạn của khách hàng
+
+Requirements:
+Hiện trạng
+ - Trong phân hệ Accouting có model account.move (hóa đơn - ghi nhận các khoản mà khách hàng phải thanh toán)
+ - Trong account.move sẽ có thông tin due date (hạn thanh toán) và danh sách các lần thanh toán(account.payment)
+=> từ đó sẽ tính ra đc các khoản nợ quá hạn của khách hàng(gồm 2 loại: đã thanh toán nhưng quá hạn, chưa thanh toán và quá hạn)
+Mong muốn 
+ - Xây dựng chức năng quy luật tính lãi cho các khoản nợ quá hạn
+  + Số tiền lãi = % cấu hình * số tiền trả chậm * số ngày chậm 
+  + Với các khoản nợ chưa thanh toán và chậm: số ngày chậm = ngày hiện tại - due date
+ - Xây dựng chức năng tính số tiền lãi mà khác hàng phải trả
+   + Thể hiện chi tiết các khoản lãi phải trả ứng với hóa đơn nào, số tiền = bao nhiêu
+   + Tính lãi cho nhiều khách hàng trong 1 lần tính, hiển thị nhóm theo khách hàng 
+ - Xây dựng chức năng tạo 1 hóa đơn mới cho phần lãi tính ra từ báo cáo trên 
+  + Trong báo cáo trên thêm chức tạo ra 1 hóa đơn cho mỗi khách hàng dựa trên số lãi tính đc trên
