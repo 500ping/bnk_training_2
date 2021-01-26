@@ -3,7 +3,7 @@ from odoo import models, fields, api, _
 class AccountMoveInherit(models.Model):
     _inherit = 'account.move'
 
-    @api.depends('invoice_date_due', 'state', 'invoice_payment_state', 'payment_history_ids')
+    @api.depends('invoice_date_due', 'state', 'invoice_payment_state')
     def _is_overdue_compute(self):
         for rec in self:
             if rec.invoice_date_due and rec.invoice_date_due < fields.Date.today()\
@@ -53,9 +53,4 @@ class AccountMoveInherit(models.Model):
 
             print(rec.invoice_date_due)
 
-            for payment in rec.payment_history_ids:
-                print(payment.payment_date)
-
-                if payment.payment_date > rec.invoice_date_due:
-                    print("1")
 
