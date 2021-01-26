@@ -18,6 +18,15 @@
                 <!-- Add your fields or attributes here -->
                 <button name="action_test_inherit" type="object" string="Test"></button>
             </xpath>
+
+            <xpath expr="//page[@name='other_info']" position="after">
+                <!-- Add your fields or attributes here -->
+                <page string="Payments history">
+                    <field name="payment_history_ids">
+
+                    </field>
+                </page>
+            </xpath>
         </field>
     </record>
 
