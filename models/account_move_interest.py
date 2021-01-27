@@ -27,7 +27,7 @@ class AccountInterest(models.Model):
         for partner_id in self.partner_ids:
             print(partner_id)
 
-            Overdue_invoices = self.env['account.move'].search([ ('is_overdue', '=', True), ('partner_id', '=', partner_id.id), ('type', 'in', ('out_invoice', 'out_refund')) ])
+            Overdue_invoices = self.env['account.move'].search([ ('has_overdue_interest', '=', True), ('partner_id', '=', partner_id.id), ('type', 'in', ('out_invoice', 'out_refund')) ])
 
             self.invoice_ids += Overdue_invoices
             # for invoice in Overdue_invoices:
@@ -37,5 +37,9 @@ class AccountInterest(models.Model):
 
     def create_invoice(self):
         print('create_invoice')
+        print(self.env['account.move'].browse(3).read())
+
+        invoices = self.env['account.move'].browse(3).filtered(lambda move: move.has_overdue_interest == True)
+        print(invoices)
 
 

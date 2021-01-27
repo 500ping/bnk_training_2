@@ -7,11 +7,11 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//div[@name='button_box']" position="after">
-                <widget name="web_ribbon" bg_color="bg-danger" title="Overdue" attrs="{'invisible': [('is_overdue', '!=', True)]}"/>
+                <widget name="web_ribbon" bg_color="bg-danger" title="Overdue" attrs="{'invisible': [('has_overdue_interest', '!=', True)]}"/>
             </xpath>
 
             <xpath expr="//field[@name='id']" position="after">
-                <field name="is_overdue" invisible="1"/>
+                <field name="has_overdue_interest" invisible="1"/>
             </xpath>
 
             <xpath expr="//button[@name='preview_invoice']" position="after">
