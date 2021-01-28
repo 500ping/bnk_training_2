@@ -44,6 +44,8 @@ class AccountInterest(models.Model):
 
                     invoice.write(vals)
 
+                    invoice.calculate_overdue_interest()
+
                     self.invoice_ids += invoice
 
                 # Case paid all money but has payment due date
@@ -58,14 +60,9 @@ class AccountInterest(models.Model):
 
                         invoice.write(vals)
 
+                        invoice.calculate_overdue_interest()
+
                         self.invoice_ids += invoice
-
-                    # for payment in invoice_payments:
-                    #     print('Payment:',payment)
-                    #     if payment.payment_date > invoice.invoice_date_due:
-                    #         print('Overdue Invoice:',invoice)
-                    #         self.invoice_ids += invoice
-
 
     def create_invoice(self):
         print('create_invoice')

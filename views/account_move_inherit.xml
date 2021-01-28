@@ -6,12 +6,16 @@
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[@name='button_box']" position="after">
-                <widget name="web_ribbon" bg_color="bg-danger" title="Overdue" attrs="{'invisible': [('has_overdue_interest', '!=', True)]}"/>
-            </xpath>
+<!--            <xpath expr="//div[@name='button_box']" position="after">-->
+<!--                <widget name="web_ribbon" bg_color="bg-danger" title="Overdue" attrs="{'invisible': [('has_overdue_interest', '!=', True)]}"/>-->
+<!--            </xpath>-->
 
-            <xpath expr="//field[@name='id']" position="after">
-                <field name="has_overdue_interest" invisible="1"/>
+<!--            <xpath expr="//field[@name='id']" position="after">-->
+<!--                <field name="has_overdue_interest" invisible="1"/>-->
+<!--            </xpath>-->
+
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="overdue_interest_rate"/>
             </xpath>
 
             <xpath expr="//button[@name='preview_invoice']" position="after">
