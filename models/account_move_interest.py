@@ -30,7 +30,7 @@ class AccountInterest(models.Model):
             print('------------------')
             print(partner_id.name)
 
-            partner_invoices = self.env['account.move'].search([ ('partner_id', '=', partner_id.id), ('type', 'in', ('out_invoice', 'out_refund')) ])
+            partner_invoices = self.env['account.move'].search([ ('partner_id', '=', partner_id.id), ('type', 'in', ('out_invoice', 'out_refund')), ('is_overdue_invoice', '=', False) ])
             check_date = fields.Date.today()
 
             for invoice in partner_invoices:
@@ -61,7 +61,14 @@ class AccountInterest(models.Model):
                         self.invoice_ids += invoice
 
     def create_invoice(self):
-        print(self.invoice_ids)
+        """
+        Create Invoices From Overdue Invoice, If Partner Overdue Invoice Exists -> Set To Draft And Edit
+        """
+        if fields.Date.today() != self.create_date:
+            self.check_overdue_interest()
+
+        if not self.invoice_ids:
+            raise ValidationError("Lam Deo Co Gi Ma Tao")
 
         for partner in self.partner_ids:
 
@@ -83,6 +90,8 @@ class AccountInterest(models.Model):
 
             # Create Or Edit Overdue Invoice For Each Partner
             if overdue_invoice:
+                is_posted_invoice = True if overdue_invoice.state == 'posted' else False
+
                 # Roll Back To Draft
                 overdue_invoice.button_draft()
 
@@ -91,6 +100,10 @@ class AccountInterest(models.Model):
                     'invoice_payment_ref': _(f'Overdue invoice - {partner.name}'),
                     'invoice_line_ids': invoice_lines,
                 })
+
+                if is_posted_invoice:
+                    overdue_invoice.action_post()
+
             else:
                 self.env['account.move'].with_context(default_type='out_invoice').create({
                     'invoice_payment_ref': _(f'Overdue invoice - {partner.name}'),

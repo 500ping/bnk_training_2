@@ -81,7 +81,7 @@ class AccountMoveInherit(models.Model):
 
     def calculate_overdue_interest(self):
         for rec in self:
-            description = ''
+            description = f'Invoice ID: {rec.name}\n'
 
             overdue_total = rec.get_overdue_total()
             overdue_interest = 0.0

@@ -22,7 +22,7 @@
                     <button name="create_invoice"
                             string="Create Invoice"
                             type="object"
-                            confirm="Create invoice?"
+                            confirm="Create Invoice?"
                             class="oe_highlight"/>
                 </header>
                 <sheet>
