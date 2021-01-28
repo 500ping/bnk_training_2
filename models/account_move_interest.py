@@ -24,7 +24,7 @@ class AccountInterest(models.Model):
         """
 
         # Clear List Invoice In View
-        self.invoice_ids = [(5 ,0 ,0)]
+        self.invoice_ids = [(5, 0, 0)]
 
         for partner_id in self.partner_ids:
             print('------------------')
@@ -65,7 +65,8 @@ class AccountInterest(models.Model):
 
         for partner in self.partner_ids:
 
-            invoices =  self.invoice_ids.filtered(lambda invoice: invoice.partner_id == partner)
+            # Get all invoice in view by partner
+            invoices = self.invoice_ids.filtered(lambda invoice: invoice.partner_id == partner)
 
             invoice_lines = []
             for invoice in invoices:
@@ -77,15 +78,28 @@ class AccountInterest(models.Model):
 
                 invoice_lines.append(invoice_line)
 
-            # Create
-            overdue_invoice = self.env['account.move'].with_context(default_type='out_invoice').create({
-                'invoice_payment_ref': _('Overdue invoice'),
-                'is_overdue_invoice': True,
-                'partner_id': partner.id,
-                'invoice_line_ids': invoice_lines,
-            })
+            overdue_invoice = self.env['account.move'].search([ ('partner_id' , '=', partner.id), ('is_overdue_invoice', '=', True) ])
+            print( overdue_invoice )
 
-            print(overdue_invoice)
+            # Create Or Edit Overdue Invoice For Each Partner
+            if overdue_invoice:
+                # Roll Back To Draft
+                overdue_invoice.button_draft()
+
+                overdue_invoice.invoice_line_ids = [(5, 0, 0)]
+                overdue_invoice.write({
+                    'invoice_payment_ref': _(f'Overdue invoice - {partner.name}'),
+                    'invoice_line_ids': invoice_lines,
+                })
+            else:
+                self.env['account.move'].with_context(default_type='out_invoice').create({
+                    'invoice_payment_ref': _(f'Overdue invoice - {partner.name}'),
+                    'is_overdue_invoice': True,
+                    'partner_id': partner.id,
+                    'invoice_line_ids': invoice_lines,
+                })
+
+
 
 
 
