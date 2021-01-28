@@ -7,7 +7,7 @@ class AccountInterest(models.Model):
 
     name = fields.Char(string="ID", required=True, copy=False, readonly=True, index=True, default=lambda self: _('New'))
     partner_ids = fields.Many2many('res.partner', string="Customers", required=True)
-    create_date = fields.Date(string="Date", required=True, default=fields.Date.today)
+    create_date = fields.Date(string="Check Date", required=True, default=fields.Date.today)
 
     invoice_ids = fields.Many2many('account.move', string="Overdue invoices")
 
@@ -22,23 +22,20 @@ class AccountInterest(models.Model):
         """
         Loop All Chosen Partners, If Parter Has Overdue Invoice Then Modify Invoice And Add To The View
         """
-        print('check_overdue_interest')
-        print(self.partner_ids)
 
         # Clear List Invoice In View
         self.invoice_ids = [(5 ,0 ,0)]
 
         for partner_id in self.partner_ids:
             print('------------------')
-            print(partner_id)
+            print(partner_id.name)
 
             partner_invoices = self.env['account.move'].search([ ('partner_id', '=', partner_id.id), ('type', 'in', ('out_invoice', 'out_refund')) ])
-            print('All Partner Invoice:',partner_invoices)
-
             check_date = fields.Date.today()
 
             for invoice in partner_invoices:
-                if invoice.invoice_date_due < fields.Date.today() and invoice.amount_residual:
+                # Case due date and not paid all the money
+                if invoice.invoice_date_due < fields.Date.today() and invoice.amount_residual > 0:
                     print('Overdue Invoice:',invoice)
 
                     vals = {
@@ -49,16 +46,25 @@ class AccountInterest(models.Model):
 
                     self.invoice_ids += invoice
 
+                # Case paid all money but has payment due date
                 if invoice.invoice_payment_state == 'paid':
-                    invoice_payments = invoice.get_invoice_payments()
-                    print('All payment in paid invoice:',invoice_payments)
-                    for payment in invoice_payments:
-                        print('Payment:',payment)
-                        if payment.payment_date > invoice.invoice_date_due:
-                            print('Overdue Invoice:',invoice)
-                            self.invoice_ids += invoice
+                    payment_overdue = invoice.get_payments_overdue()
+                    if len(payment_overdue) > 0:
+                        print('Overdue Invoice:', invoice)
 
-            # self.invoice_ids += Overdue_invoices
+                        vals = {
+                            'overdue_check_date': check_date,
+                        }
+
+                        invoice.write(vals)
+
+                        self.invoice_ids += invoice
+
+                    # for payment in invoice_payments:
+                    #     print('Payment:',payment)
+                    #     if payment.payment_date > invoice.invoice_date_due:
+                    #         print('Overdue Invoice:',invoice)
+                    #         self.invoice_ids += invoice
 
 
     def create_invoice(self):

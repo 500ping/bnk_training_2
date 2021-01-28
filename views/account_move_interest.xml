@@ -43,7 +43,7 @@
                                     <field name="partner_id"/>
                                     <field name="state" invisible="1"/>
                                     <field name="invoice_date_due"/>
-                                    <field name="overdue_interest_remaining"/>
+                                    <field name="overdue_interest_at_check_date"/>
                                 </tree>
                             </field>
                         </page>

@@ -47,10 +47,25 @@ class AccountMoveInherit(models.Model):
 
     # Custom fields
     has_overdue_interest = fields.Boolean(string="Has Overdue Interest", default=False)
-    overdue_interest_remaining = fields.Monetary(string='Overdue Interest Remaining', currency_field='company_currency_id', default=0.0)
+    overdue_interest_at_check_date = fields.Monetary(string='Overdue Interest At Check Date', currency_field='company_currency_id', default=0.0)
     overdue_check_date = fields.Date(string='Overdue Check Date')
 
     payment_history_ids = fields.Many2many('account.payment', string='Payments history', compute='_payment_history_ids_compute')
+
+    def action_test_inherit(self):
+        print('Today:', fields.Date.today())
+        for rec in self:
+            print(rec.has_overdue_interest)
+            print(rec.amount_residual)
+
+            print('Due date:',rec.invoice_date_due)
+
+            invoice_payments = json.loads(rec.invoice_payments_widget)
+
+            for content in invoice_payments['content']:
+                print(content['account_payment_id'])
+
+            print(rec.get_overdue_total())
 
     def get_invoice_payments(self):
         for rec in self:
@@ -59,19 +74,33 @@ class AccountMoveInherit(models.Model):
                 payment_ids = [content['account_payment_id'] for content in invoice_payments_info['content']]
                 return self.env['account.payment'].browse(payment_ids)
 
-    def action_test_inherit(self):
-        for rec in self:
-            print(rec.has_overdue_interest)
-            print(rec.amount_residual)
-            # print(rec.overdue_interest)
-            # print(self.env['account.payment'].search([('invoice_ids', '=', rec.id)]))
+    def get_payments_not_overdue(self):
+        payments = self.get_invoice_payments()
+        payments_not_overdue = payments.filtered(lambda payment: payment.payment_date <= self.invoice_date_due)
+        return payments_not_overdue
 
-            print('Due date:',rec.invoice_date_due)
-            invoice_payments = json.loads(rec.invoice_payments_widget)
-            # print(invoice_payments['content'])
+    def get_payments_overdue(self):
+        payments = self.get_invoice_payments()
+        payments_overdue = payments.filtered(lambda payment: payment.payment_date > self.invoice_date_due)
+        return payments_overdue
 
-            # for content in invoice_payments['content']:
-            #     print(content['account_payment_id'])
+    def get_overdue_total(self):
+        overdue_total = self.amount_total
 
-            # print( [content['account_payment_id'] for content in invoice_payments['content']] )
-        print('Today:',fields.Date.today())
+        payments_not_overdue = self.get_payments_not_overdue()
+
+        if len(payments_not_overdue) == 0:
+            return overdue_total
+        else:
+            for payment in payments_not_overdue:
+                overdue_total -= payment.amount
+            return overdue_total
+
+    def calculate_overdue_interest(self):
+        overdue_total = self.get_overdue_total()
+
+
+
+
+
+
