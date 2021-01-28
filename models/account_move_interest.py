@@ -41,10 +41,8 @@ class AccountInterest(models.Model):
                     vals = {
                         'overdue_check_date': check_date,
                     }
-
                     invoice.write(vals)
-
-                    invoice.calculate_overdue_interest()
+                    description = invoice.calculate_overdue_interest()
 
                     self.invoice_ids += invoice
 
@@ -57,18 +55,40 @@ class AccountInterest(models.Model):
                         vals = {
                             'overdue_check_date': check_date,
                         }
-
                         invoice.write(vals)
-
-                        invoice.calculate_overdue_interest()
+                        description = invoice.calculate_overdue_interest()
 
                         self.invoice_ids += invoice
 
     def create_invoice(self):
-        print('create_invoice')
-        print(self.env['account.move'].browse(3).read())
+        print(self.invoice_ids)
 
-        invoices = self.env['account.move'].browse(3).filtered(lambda move: move.has_overdue_interest == True)
-        print(invoices)
+        for partner in self.partner_ids:
+
+            invoices =  self.invoice_ids.filtered(lambda invoice: invoice.partner_id == partner)
+
+            invoice_lines = []
+            for invoice in invoices:
+                description = invoice.calculate_overdue_interest()
+                invoice_line = (0, 0, {
+                    'name': description,
+                    'price_unit': invoice.overdue_interest_at_check_date,
+                })
+
+                invoice_lines.append(invoice_line)
+
+            # Create
+            overdue_invoice = self.env['account.move'].with_context(default_type='out_invoice').create({
+                'invoice_payment_ref': _('Overdue invoice'),
+                'is_overdue_invoice': True,
+                'partner_id': partner.id,
+                'invoice_line_ids': invoice_lines,
+            })
+
+            print(overdue_invoice)
+
+
+
+
 
 

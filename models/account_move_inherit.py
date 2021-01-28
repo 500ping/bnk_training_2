@@ -21,6 +21,8 @@ class AccountMoveInherit(models.Model):
     overdue_interest_at_check_date = fields.Monetary(string='Overdue Interest At Check Date', currency_field='company_currency_id', default=0.0)
     overdue_check_date = fields.Date(string='Overdue Check Date')
 
+    is_overdue_invoice = fields.Boolean(string='Is Overdue Invoice', default=False)
+
     payment_history_ids = fields.Many2many('account.payment', string='Payments history', compute='_payment_history_ids_compute')
 
     def action_test_inherit(self):
@@ -79,6 +81,8 @@ class AccountMoveInherit(models.Model):
 
     def calculate_overdue_interest(self):
         for rec in self:
+            description = ''
+
             overdue_total = rec.get_overdue_total()
             overdue_interest = 0.0
 
@@ -86,13 +90,19 @@ class AccountMoveInherit(models.Model):
 
             if payments_overdue:
                 for payment in payments_overdue:
-                    overdue_interest += (overdue_total * rec.overdue_interest_rate / 100) * ( (payment.payment_date - rec.invoice_date_due).days ) # Due date to payment date
+                    slow_days = (payment.payment_date - rec.invoice_date_due).days
+                    overdue_interest += (overdue_total * rec.overdue_interest_rate / 100) * ( slow_days ) # Due date to payment date
                     overdue_total -= payment.amount
 
+                    description += f'Payment: {payment.name} - Slow days: {slow_days} - Interest At Payment Date: {overdue_interest}\n'
+
             if overdue_total:
-                overdue_interest += (overdue_total * rec.overdue_interest_rate / 100) * ( (fields.Date.today() - rec.invoice_date_due).days ) # Due date to today
+                slow_days = (fields.Date.today() - rec.invoice_date_due).days
+                overdue_interest += (overdue_total * rec.overdue_interest_rate / 100) * ( slow_days ) # Due date to today
+                description += f'Amount Due: {overdue_total} - Slow days: {slow_days} - Interest To Now: {overdue_interest}\n'
 
             rec.overdue_interest_at_check_date = overdue_interest
+            return description
 
 
 
