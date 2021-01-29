@@ -32,7 +32,7 @@ class AccountInterest(models.Model):
             print('------------------')
             print(partner_id.name)
 
-            partner_invoices = self.env['account.move'].search([ ('partner_id', '=', partner_id.id), ('type', 'in', ('out_invoice', 'out_refund')), ('is_overdue_invoice', '=', False) ])
+            partner_invoices = self.env['account.move'].search([ ('partner_id', '=', partner_id.id), ('type', 'in', ('out_invoice', 'out_refund')), ('is_overdue_invoice', '=', False), ('state', '=', 'posted') ])
             check_date = fields.Date.today()
 
             vals = {
@@ -44,6 +44,7 @@ class AccountInterest(models.Model):
                 if invoice.invoice_date_due < fields.Date.today() and invoice.amount_residual > 0:
                     print('Overdue Invoice:',invoice)
                     invoice.write(vals)
+                    invoice.calculate_overdue_interest()
 
                     self.invoice_ids += invoice
 
@@ -53,6 +54,7 @@ class AccountInterest(models.Model):
                     if len(payment_overdue) > 0:
                         print('Overdue Invoice:', invoice)
                         invoice.write(vals)
+                        invoice.calculate_overdue_interest()
 
                         self.invoice_ids += invoice
 
@@ -71,7 +73,7 @@ class AccountInterest(models.Model):
             # Get all invoice in view by partner
             invoices = self.invoice_ids.filtered(lambda invoice: invoice.partner_id == partner)
             if not invoices:
-                break
+                continue
 
             invoice_lines = []
             for invoice in invoices:

@@ -91,7 +91,6 @@ class AccountMoveInherit(models.Model):
                     slow_days = (payment.payment_date - rec.invoice_date_due).days
                     overdue_interest += (overdue_total * rec.overdue_interest_rate / 100) * ( slow_days ) # Due date to payment date
                     overdue_total -= payment.amount
-
                     description += f'Payment: {payment.name} - Slow days: {slow_days} - Interest At Payment Date: {overdue_interest}\n'
 
             if overdue_total:
