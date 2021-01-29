@@ -19,20 +19,46 @@ class AccountInterest(models.Model):
         return result
 
     def check_overdue_interest(self):
+        """
+        Loop All Chosen Partners, If Parter Has Overdue Invoice Then Modify Invoice And Add To The View
+        """
         print('check_overdue_interest')
         print(self.partner_ids)
 
+        # Clear List Invoice In View
         self.invoice_ids = [(5 ,0 ,0)]
 
         for partner_id in self.partner_ids:
+            print('------------------')
             print(partner_id)
 
-            Overdue_invoices = self.env['account.move'].search([ ('has_overdue_interest', '=', True), ('partner_id', '=', partner_id.id), ('type', 'in', ('out_invoice', 'out_refund')) ])
+            partner_invoices = self.env['account.move'].search([ ('partner_id', '=', partner_id.id), ('type', 'in', ('out_invoice', 'out_refund')) ])
+            print('All Partner Invoice:',partner_invoices)
 
-            self.invoice_ids += Overdue_invoices
-            # for invoice in Overdue_invoices:
-            #     print(invoice)
-            #     self.invoice_ids = invoice
+            check_date = fields.Date.today()
+
+            for invoice in partner_invoices:
+                if invoice.invoice_date_due < fields.Date.today() and invoice.amount_residual:
+                    print('Overdue Invoice:',invoice)
+
+                    vals = {
+                        'overdue_check_date': check_date,
+                    }
+
+                    invoice.write(vals)
+
+                    self.invoice_ids += invoice
+
+                if invoice.invoice_payment_state == 'paid':
+                    invoice_payments = invoice.get_invoice_payments()
+                    print('All payment in paid invoice:',invoice_payments)
+                    for payment in invoice_payments:
+                        print('Payment:',payment)
+                        if payment.payment_date > invoice.invoice_date_due:
+                            print('Overdue Invoice:',invoice)
+                            self.invoice_ids += invoice
+
+            # self.invoice_ids += Overdue_invoices
 
 
     def create_invoice(self):
