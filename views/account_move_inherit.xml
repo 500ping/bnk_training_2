@@ -1,19 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
 
+    <record id="account_move_tree_inherit" model="ir.ui.view">
+        <field name="name">account.move.tree.inherit</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <tree position="attributes">
+                <attribute name="decoration-danger">is_overdue_invoice==True</attribute>
+            </tree>
+
+            <xpath expr="//field[@name='type']" position="after">
+                <field name="is_overdue_invoice" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+
     <record id="account_move_form_inherit" model="ir.ui.view">
         <field name="name">account.move.form.inherit</field>
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
-<!--            <xpath expr="//div[@name='button_box']" position="after">-->
-<!--                <widget name="web_ribbon" bg_color="bg-danger" title="Overdue" attrs="{'invisible': [('has_overdue_interest', '!=', True)]}"/>-->
-<!--            </xpath>-->
-
-<!--            <xpath expr="//field[@name='id']" position="after">-->
-<!--                <field name="has_overdue_interest" invisible="1"/>-->
-<!--            </xpath>-->
-
             <xpath expr="//field[@name='company_id']" position="after">
                 <field name="overdue_interest_rate"/>
             </xpath>
@@ -30,6 +37,17 @@
 
                     </field>
                 </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="account_move_search_inherit" model="ir.ui.view">
+        <field name="name">account.move.search.inherit</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <filter string="Overdue Invoice Interest" name="interest_custom_filter" domain="[('is_overdue_invoice', '=', True)]"/>
             </xpath>
         </field>
     </record>

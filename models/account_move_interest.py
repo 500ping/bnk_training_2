@@ -1,13 +1,15 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
+import json
+
 class AccountInterest(models.Model):
     _name = 'account.interest'
     _description = 'Calculate overdue invoice interest'
 
     name = fields.Char(string="ID", required=True, copy=False, readonly=True, index=True, default=lambda self: _('New'))
     partner_ids = fields.Many2many('res.partner', string="Customers", required=True)
-    create_date = fields.Date(string="Check Date", required=True, default=fields.Date.today)
+    create_date = fields.Date(string="Create Date", required=True, default=fields.Date.today)
 
     invoice_ids = fields.Many2many('account.move', string="Overdue invoices")
 
@@ -33,16 +35,15 @@ class AccountInterest(models.Model):
             partner_invoices = self.env['account.move'].search([ ('partner_id', '=', partner_id.id), ('type', 'in', ('out_invoice', 'out_refund')), ('is_overdue_invoice', '=', False) ])
             check_date = fields.Date.today()
 
+            vals = {
+                'overdue_check_date': check_date,
+            }
+
             for invoice in partner_invoices:
                 # Case due date and not paid all the money
                 if invoice.invoice_date_due < fields.Date.today() and invoice.amount_residual > 0:
                     print('Overdue Invoice:',invoice)
-
-                    vals = {
-                        'overdue_check_date': check_date,
-                    }
                     invoice.write(vals)
-                    description = invoice.calculate_overdue_interest()
 
                     self.invoice_ids += invoice
 
@@ -51,18 +52,13 @@ class AccountInterest(models.Model):
                     payment_overdue = invoice.get_payments_overdue()
                     if len(payment_overdue) > 0:
                         print('Overdue Invoice:', invoice)
-
-                        vals = {
-                            'overdue_check_date': check_date,
-                        }
                         invoice.write(vals)
-                        description = invoice.calculate_overdue_interest()
 
                         self.invoice_ids += invoice
 
     def create_invoice(self):
         """
-        Create Invoices From Overdue Invoice, If Partner Overdue Invoice Exists -> Set To Draft And Edit
+        Create Invoices From Overdue Invoice, If Partner Overdue Invoice Exists -> Set To Draft And Edit(Need To Re Add Payment)
         """
         if fields.Date.today() != self.create_date:
             self.check_overdue_interest()
@@ -74,6 +70,8 @@ class AccountInterest(models.Model):
 
             # Get all invoice in view by partner
             invoices = self.invoice_ids.filtered(lambda invoice: invoice.partner_id == partner)
+            if not invoices:
+                break
 
             invoice_lines = []
             for invoice in invoices:
@@ -90,8 +88,6 @@ class AccountInterest(models.Model):
 
             # Create Or Edit Overdue Invoice For Each Partner
             if overdue_invoice:
-                is_posted_invoice = True if overdue_invoice.state == 'posted' else False
-
                 # Roll Back To Draft
                 overdue_invoice.button_draft()
 
@@ -99,18 +95,15 @@ class AccountInterest(models.Model):
                 overdue_invoice.write({
                     'invoice_payment_ref': _(f'Overdue invoice - {partner.name}'),
                     'invoice_line_ids': invoice_lines,
-                })
-
-                if is_posted_invoice:
-                    overdue_invoice.action_post()
-
+                }).action_post()
+                # overdue_invoice.action_post()
             else:
                 self.env['account.move'].with_context(default_type='out_invoice').create({
                     'invoice_payment_ref': _(f'Overdue invoice - {partner.name}'),
                     'is_overdue_invoice': True,
                     'partner_id': partner.id,
                     'invoice_line_ids': invoice_lines,
-                })
+                }).action_post()
 
 
 
