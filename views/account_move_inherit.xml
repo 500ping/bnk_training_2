@@ -22,7 +22,8 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='company_id']" position="after">
-                <field name="overdue_interest_rate"/>
+                <field name="is_overdue_invoice" invisible="1"/>
+                <field name="overdue_interest_rate" attrs="{'invisible': [('is_overdue_invoice', '=', True)]}"/>
             </xpath>
 
             <xpath expr="//button[@name='preview_invoice']" position="after">

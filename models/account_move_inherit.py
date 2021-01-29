@@ -16,7 +16,8 @@ class AccountMoveInherit(models.Model):
                 self.payment_history_ids = False
 
     # Custom fields
-    overdue_interest_rate = fields.Integer(string="Overdue Interest Rate (%)", default=10)
+    # overdue_interest_rate = fields.Integer(string="Overdue Interest Rate (%)", default=10)
+    overdue_interest_rate = fields.Integer(string="Overdue Interest Rate (%)", default=lambda self: self.env["ir.config_parameter"].sudo().get_param("account_move.overdue_interest_rate"))
     # has_overdue_interest = fields.Boolean(string="Has Overdue Interest", default=False)
     overdue_interest_at_check_date = fields.Monetary(string='Overdue Interest At Check Date', currency_field='company_currency_id', default=0.0)
     overdue_check_date = fields.Date(string='Overdue Check Date')
@@ -32,15 +33,12 @@ class AccountMoveInherit(models.Model):
 
             print('Due date:',rec.invoice_date_due)
 
-            invoice_payments = json.loads(rec.invoice_payments_widget)
-
-            for content in invoice_payments['content']:
-                print(content['account_payment_id'])
+            # invoice_payments = json.loads(rec.invoice_payments_widget)
+            #
+            # for content in invoice_payments['content']:
+            #     print(content['account_payment_id'])
 
             print('Overdue Total:',rec.get_overdue_total())
-
-            overdue_dates = fields.Date.today() - rec.invoice_date_due
-            print((fields.Date.today() - rec.invoice_date_due).days)
 
     def get_invoice_payments(self):
         for rec in self:

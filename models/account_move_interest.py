@@ -95,8 +95,8 @@ class AccountInterest(models.Model):
                 overdue_invoice.write({
                     'invoice_payment_ref': _(f'Overdue invoice - {partner.name}'),
                     'invoice_line_ids': invoice_lines,
-                }).action_post()
-                # overdue_invoice.action_post()
+                })
+                overdue_invoice.action_post()
             else:
                 self.env['account.move'].with_context(default_type='out_invoice').create({
                     'invoice_payment_ref': _(f'Overdue invoice - {partner.name}'),
